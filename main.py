@@ -1,16 +1,61 @@
-# This is a sample Python script.
+import numpy as np
+import re
+import nltk
+import pandas as pd
+from sklearn.datasets import load_files
+import pickle
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.ensemble import RandomForestClassifier
 
-# Press Maj+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+nltk.download('stopwords')
 
+data = pd.read_csv("timetables.csv", sep=";")
+X, y = data.trajet, data.trip_id
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+documents = []
 
+stemmer = WordNetLemmatizer()
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+for sen in range(0, len(X)):
+    # Remove all the special characters
+    document = re.sub(r'\W', ' ', str(X[sen]))
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    # remove all single characters
+    document = re.sub(r'\s+[a-zA-Z]\s+', ' ', document)
+
+    # Remove single characters from the start
+    document = re.sub(r'\^[a-zA-Z]\s+', ' ', document)
+
+    # Substituting multiple spaces with single space
+    document = re.sub(r'\s+', ' ', document, flags=re.I)
+
+    # Removing prefixed 'b'
+    document = re.sub(r'^b\s+', '', document)
+
+    # Converting to Lowercase
+    document = document.lower()
+
+    # Lemmatization
+    document = document.split()
+
+    document = [stemmer.lemmatize(word) for word in document]
+    document = ' '.join(document)
+
+    documents.append(document)
+
+vectorizer = CountVectorizer(max_features=1500, min_df=5, max_df=0.7, stop_words=stopwords.words('french'))
+X = vectorizer.fit_transform(documents).toarray()
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+classifier = RandomForestClassifier(n_estimators=1000, random_state=0)
+classifier.fit(X_train, y_train)
+y_pred = classifier.predict(X_test)
+
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+print(confusion_matrix(y_test,y_pred))
+print(classification_report(y_test,y_pred))
+print(accuracy_score(y_test, y_pred))
