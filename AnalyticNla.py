@@ -2,32 +2,39 @@ import numpy as np
 import pandas as pd
 import re
 import nltk
-import matplotlib.pyplot as plt
-from sklearn.feature_extraction.text import CountVectorizer
-from nltk.tokenize import RegexpTokenizer
-from sklearn.model_selection import train_test_split
-from sklearn import metrics
-#Import scikit-learn metrics module for accuracy calculation
-from sklearn.naive_bayes import MultinomialNB
+import string
 
-#https://www.nltk.org/book/ch07.html#ref-ie-segment
-#https://stackabuse.com/python-for-nlp-creating-bag-of-words-model-from-scratch/
+# nltk.download()
 
-nltk.download('stopwords')
-nltk.download('punkt')
+# https://www.nltk.org/book/ch07.html#ref-ie-segment
+# https://stackabuse.com/python-for-nlp-creating-bag-of-words-model-from-scratch/
 
-data = pd.read_csv('timetables.csv', sep=';')
+# Lire les données depuis le fichier CSV
+rawData = pd.read_csv("timetables.csv", sep=';', names=['idTrajet', 'Trajet', 'TempsTrajet'], header=1)
 
-# tokenizer to remove unwanted elements from out data like symbols and numbers
-token = RegexpTokenizer(r'[a-zA-Z0-9]+')
-cv = CountVectorizer(lowercase=True, stop_words='english', ngram_range=(1, 1), tokenizer=token.tokenize)
-text_counts = cv.fit_transform(data['trajet'])
 
-X_train, X_test, y_train, y_test = train_test_split(
-    text_counts, data['trajet'], test_size=0.3, random_state=1)
+# Function pour retirer la ponctuation
+def remove_punct(text):
+    text_nopunct = "".join([char for char in text if char not in string.punctuation])  # retire toute les ponctuations
+    return text_nopunct
 
-# Model Generation Using Multinomial Naive Bayes
 
-clf = MultinomialNB().fit(X_train, y_train)
-predicted= clf.predict(X_test)
-print("MultinomialNB Accuracy:", metrics.accuracy_score(y_test, predicted))
+rawData['body_text_clean'] = rawData['Trajet'].apply(lambda x: remove_punct(x))
+
+def tokenize(text):
+    tokens = re.split('\W+', text) #W+ veux dire sois un caratère A-Za-z0-9 ou un tiret
+    return tokens
+
+
+rawData['body_text_tokenized'] = rawData['body_text_clean'].apply(lambda x: tokenize(x.lower()))
+
+stopword = nltk.corpus.stopwords.words('french')
+
+#Function pour retirer les stopwords
+def remove_stopwords(tokenized_list):
+    text = [word for word in tokenized_list if word not in stopword]#suppression des stopwords
+    return text
+
+
+rawData['body_text_nostop'] = rawData['body_text_tokenized'].apply(lambda x: remove_stopwords(x))
+
