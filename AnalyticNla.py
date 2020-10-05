@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import re
 import nltk
+from nltk.stem.snowball import FrenchStemmer
 import string
 
 # nltk.download()
@@ -10,7 +11,7 @@ import string
 # https://stackabuse.com/python-for-nlp-creating-bag-of-words-model-from-scratch/
 
 # Lire les données depuis le fichier CSV
-rawData = pd.read_csv("timetables.csv", sep=';', names=['idTrajet', 'Trajet', 'TempsTrajet'], header=1)
+rawData = pd.read_csv("timetables.csv", sep=';')
 
 
 # Function pour retirer la ponctuation
@@ -19,10 +20,11 @@ def remove_punct(text):
     return text_nopunct
 
 
-rawData['body_text_clean'] = rawData['Trajet'].apply(lambda x: remove_punct(x))
+rawData['body_text_clean'] = rawData['trajet'].apply(lambda x: remove_punct(x))
+
 
 def tokenize(text):
-    tokens = re.split('\W+', text) #W+ veux dire sois un caratère A-Za-z0-9 ou un tiret
+    tokens = re.split('\W+', text)  # W+ veux dire sois un caratère A-Za-z0-9 ou un tiret
     return tokens
 
 
@@ -30,11 +32,22 @@ rawData['body_text_tokenized'] = rawData['body_text_clean'].apply(lambda x: toke
 
 stopword = nltk.corpus.stopwords.words('french')
 
-#Function pour retirer les stopwords
+
+# Function pour retirer les stopwords
 def remove_stopwords(tokenized_list):
-    text = [word for word in tokenized_list if word not in stopword]#suppression des stopwords
+    text = [word for word in tokenized_list if word not in stopword]  # suppression des stopwords
     return text
 
 
 rawData['body_text_nostop'] = rawData['body_text_tokenized'].apply(lambda x: remove_stopwords(x))
 
+# ps = FrenchStemmer()
+
+# def stemming(tokenized_text):
+#    text = [ps.stem(word) for word in tokenized_text]
+#   return text
+
+
+# rawData['body_text_stemmed'] = rawData['body_text_nostop'].apply(lambda x: stemming(x))
+
+print(rawData[0:10])
