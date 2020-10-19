@@ -4,6 +4,7 @@ import re
 import nltk
 from nltk.stem.snowball import FrenchStemmer
 import string
+import requests
 
 # nltk.download()
 
@@ -21,6 +22,7 @@ def remove_punct(text):
 
 
 rawData['body_text_clean'] = rawData['trajet'].apply(lambda x: remove_punct(x))
+
 
 
 def tokenize(text):
@@ -41,13 +43,6 @@ def remove_stopwords(tokenized_list):
 
 rawData['body_text_nostop'] = rawData['body_text_tokenized'].apply(lambda x: remove_stopwords(x))
 
-# ps = FrenchStemmer()
-
-# def stemming(tokenized_text):
-#    text = [ps.stem(word) for word in tokenized_text]
-#   return text
-
-
-# rawData['body_text_stemmed'] = rawData['body_text_nostop'].apply(lambda x: stemming(x))
-
-print(rawData[0:10])
+serverName = ''
+value = ''
+r = requests.post(serverName, data = {'key' : value})
